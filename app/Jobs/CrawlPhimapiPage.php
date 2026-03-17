@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\MovieStream;
 use Illuminate\Bus\Queueable;
+use Illuminate\Bus\Batchable;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
@@ -12,8 +13,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 
 class CrawlPhimapiPage implements ShouldQueue
 {
-
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
 
     public $page;
 
@@ -24,7 +24,6 @@ class CrawlPhimapiPage implements ShouldQueue
 
     public function handle()
     {
-
         $url = "https://phimapi.com/danh-sach/phim-moi-cap-nhat?page=" . $this->page;
 
         $response = Http::get($url);
@@ -32,29 +31,42 @@ class CrawlPhimapiPage implements ShouldQueue
         $items = $response->json('items');
 
         if (!$items) return;
-        echo "Crawling page " . $this->page . " with " . count($items) . " items\n";
 
         foreach ($items as $movie) {
 
             if (!isset($movie['tmdb']['id'])) continue;
 
             $tmdbId = $movie['tmdb']['id'];
+            $slug = $movie['slug'];
+
+            $type = $movie['tmdb']['type'] ?? 'movie';
+
+            $season = null;
+
+            if ($type === 'tv') {
+
+                if (preg_match('/phan-(\d+)/', $slug, $match)) {
+                    $season = (int)$match[1];
+                } else {
+                    $season = 1;
+                }
+            }
 
             MovieStream::updateOrCreate(
 
                 [
-                    'tmdb_id' => $tmdbId
+                    'tmdb_id' => $tmdbId,
+                    'type' => $type,
+                    'season' => $season
                 ],
 
                 [
-                    'slug' => $movie['slug'],
-                    'type' => $movie['tmdb']['type'] ?? 'movie',
+                    'slug' => $slug,
                     'source' => 'phimapi'
                 ]
 
             );
-
-            echo "Saved TMDB " . $tmdbId . " -> " . $movie['slug'] . "\n";
         }
+        echo "PhimAPI page {$this->page} done\n";
     }
 }

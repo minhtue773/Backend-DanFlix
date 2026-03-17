@@ -9,6 +9,7 @@ class MovieStream extends Model
 
     protected $fillable = [
         'tmdb_id',
+        'season',
         'slug',
         'type',
         'source'

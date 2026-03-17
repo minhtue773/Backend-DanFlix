@@ -12,7 +12,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 
 class CrawlTmdbPage implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, Queueable, SerializesModels, InteractsWithQueue;
 
     public $page;
 
@@ -39,20 +39,21 @@ class CrawlTmdbPage implements ShouldQueue
         foreach ($movies as $movie) {
 
             Movie::updateOrCreate(
+
                 [
-                    'tmdb_id' => $movie['id']
+                    'tmdb_id' => $movie['id'],
+                    'type' => 'movie'
                 ],
+
                 [
                     'title' => $movie['title'],
                     'original_title' => $movie['original_title'],
-                    'year' => substr($movie['release_date'] ?? '', 0, 4),
-                    'poster_path' => $movie['poster_path'],
-                    'backdrop_path' => $movie['backdrop_path'],
-                    'type' => 'movie'
+                    'year' => substr($movie['release_date'] ?? '', 0, 4)
                 ]
+
             );
         }
 
-        echo "Page {$this->page} done\n";
+        echo "Movie page {$this->page} done\n";
     }
 }

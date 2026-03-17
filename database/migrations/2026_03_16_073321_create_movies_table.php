@@ -12,19 +12,17 @@ return new class extends Migration
 
             $table->id();
 
-            $table->bigInteger('tmdb_id')->unique();
+            $table->bigInteger('tmdb_id');
+            $table->string('type'); // movie | tv
 
             $table->string('title');
             $table->string('original_title')->nullable();
 
             $table->integer('year')->nullable();
 
-            $table->string('poster_path')->nullable();
-            $table->string('backdrop_path')->nullable();
-
-            $table->string('type')->default('movie');
-
             $table->timestamps();
+
+            $table->unique(['tmdb_id', 'type']);
         });
     }
 

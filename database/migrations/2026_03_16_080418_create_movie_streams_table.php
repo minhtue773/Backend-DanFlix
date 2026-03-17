@@ -12,15 +12,19 @@ return new class extends Migration {
 
             $table->id();
 
-            $table->bigInteger('tmdb_id')->index();
-
-            $table->string('slug');
+            $table->bigInteger('tmdb_id');
 
             $table->string('type'); // movie | tv
+
+            $table->integer('season')->nullable();
+
+            $table->string('slug');
 
             $table->string('source')->default('phimapi');
 
             $table->timestamps();
+
+            $table->unique(['tmdb_id', 'type', 'season']);
         });
     }
 

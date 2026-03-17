@@ -40,17 +40,17 @@ class CrawlTmdbTvPage implements ShouldQueue
         foreach ($tvs as $tv) {
 
             Movie::updateOrCreate(
+
                 [
-                    'tmdb_id' => $tv['id']
+                    'tmdb_id' => $tv['id'],
+                    'type' => 'tv'
                 ],
                 [
                     'title' => $tv['name'],
                     'original_title' => $tv['original_name'],
                     'year' => substr($tv['first_air_date'] ?? '', 0, 4),
-                    'poster_path' => $tv['poster_path'],
-                    'backdrop_path' => $tv['backdrop_path'],
-                    'type' => 'tv'
                 ]
+
             );
         }
 

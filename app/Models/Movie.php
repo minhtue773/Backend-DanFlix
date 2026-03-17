@@ -12,8 +12,6 @@ class Movie extends Model
         'title',
         'original_title',
         'year',
-        'poster_path',
-        'backdrop_path',
         'type'
 
     ];
