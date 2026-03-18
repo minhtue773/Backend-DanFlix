@@ -12,19 +12,19 @@ return new class extends Migration {
 
             $table->id();
 
-            $table->bigInteger('tmdb_id');
-
+            $table->bigInteger('tmdb_id')->nullable();
             $table->string('type'); // movie | tv
-
             $table->integer('season')->nullable();
-
             $table->string('slug');
-
             $table->string('source')->default('phimapi');
+            $table->float('match_score')->nullable();
+            $table->string('matched_by')->nullable(); // imdb | fuzzy
+            $table->timestamp('last_checked_at')->nullable();
 
             $table->timestamps();
 
-            $table->unique(['tmdb_id', 'type', 'season']);
+            $table->unique(['slug', 'source']);
+            $table->index(['tmdb_id', 'type', 'season']);
         });
     }
 

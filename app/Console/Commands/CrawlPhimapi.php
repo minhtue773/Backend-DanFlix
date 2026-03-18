@@ -4,49 +4,48 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Bus;
-use Illuminate\Bus\Batch;
-use Throwable;
-
+use Illuminate\Support\Facades\Log;
 use App\Jobs\CrawlPhimapiPage;
 
 class CrawlPhimapi extends Command
 {
-
-    protected $signature = 'crawl:phimapi';
-
-    protected $description = 'Crawl PhimAPI and map TMDB';
+    protected $signature = 'crawl:phimapi {--from=1} {--to=2658}';
+    protected $description = 'Crawl PhimAPI (production ready)';
 
     public function handle()
     {
+        $from = (int) $this->option('from');
+        $to = (int) $this->option('to');
 
-        $this->info("Preparing jobs...");
+        $chunkSize = 50;
+        $delay = 0;
 
-        $jobs = [];
+        $this->info("Start crawling from {$from} → {$to}");
 
-        for ($page = 1; $page <= 2658; $page++) {
+        for ($i = $from; $i <= $to; $i += $chunkSize) {
 
-            $jobs[] = new CrawlPhimapiPage($page);
+            $jobs = [];
+
+            for ($page = $i; $page < $i + $chunkSize && $page <= $to; $page++) {
+                $jobs[] = (new CrawlPhimapiPage($page))
+                    ->onQueue('crawl')
+                    ->delay(now()->addSeconds($delay));
+            }
+
+            $start = $i;
+            $end = min($i + $chunkSize - 1, $to);
+
+            Bus::batch($jobs)
+                ->name("Crawl {$start} - {$end}")
+                ->allowFailures()
+                ->then(fn() => Log::info("✅ Batch {$start}-{$end} done"))
+                ->catch(fn($batch, $e) => Log::error("❌ Batch {$start}-{$end}: " . $e->getMessage()))
+                ->dispatch();
+
+            // 🔥 tránh spam DB + API
+            $delay += 5;
         }
 
-        Bus::batch($jobs)
-
-            ->then(function (Batch $batch) {
-
-                echo "All PhimAPI pages crawled successfully!\n";
-            })
-
-            ->catch(function (Batch $batch, Throwable $e) {
-
-                echo "Batch failed: " . $e->getMessage() . "\n";
-            })
-
-            ->finally(function (Batch $batch) {
-
-                echo "Batch finished\n";
-            })
-
-            ->dispatch();
-
-        $this->info("Batch dispatched with " . count($jobs) . " jobs.");
+        $this->info("All batches dispatched!");
     }
 }

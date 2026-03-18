@@ -13,6 +13,5 @@ class Movie extends Model
         'original_title',
         'year',
         'type'
-
     ];
 }

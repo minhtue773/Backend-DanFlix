@@ -9,9 +9,12 @@ class MovieStream extends Model
 
     protected $fillable = [
         'tmdb_id',
+        'type',
         'season',
         'slug',
-        'type',
-        'source'
+        'source',
+        'match_score',
+        'matched_by',
+        'last_checked_at'
     ];
 }

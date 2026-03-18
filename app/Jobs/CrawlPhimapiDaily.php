@@ -9,7 +9,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 
-class CrawlPhimapiPage implements ShouldQueue
+class CrawlPhimapiDaily implements ShouldQueue
 {
     use Dispatchable, Queueable, SerializesModels;
 
@@ -42,16 +42,22 @@ class CrawlPhimapiPage implements ShouldQueue
                 }
             }
 
+            $updateData = [
+                'type' => $type,
+                'season' => $season,
+            ];
+
+            // Chỉ thêm tmdb_id nếu có
+            if (isset($movie['tmdb']['id'])) {
+                $updateData['tmdb_id'] = $movie['tmdb']['id'];
+            }
+
             MovieStream::updateOrCreate(
                 [
                     'slug' => $slug,
                     'source' => 'phimapi'
                 ],
-                [
-                    'tmdb_id' => $movie['tmdb']['id'] ?? null,
-                    'type' => $type,
-                    'season' => $season
-                ]
+                $updateData
             );
 
             // Nếu chưa có tmdb → dispatch match
